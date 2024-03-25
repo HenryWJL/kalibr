@@ -8,6 +8,7 @@ import numpy as np
 import argparse
 import signal
 import sys   
+from pathlib import Path
 
 # make numpy print prettier
 np.set_printoptions(suppress=True)
@@ -199,40 +200,22 @@ def main():
                       verbose = parsed.verbose)
 
     print()
-    print("Before Optimization")
-    print("===================")
-    util.printErrorStatistics(iCal)
-    
-    print()
-    print("Optimizing...")
-    iCal.optimize(maxIterations=parsed.max_iter, recoverCov=parsed.recover_cov)
-
-    print()
-    print("After Optimization (Results)")
+    print("Results")
     print("==================")
     util.printErrorStatistics(iCal)
     util.printResults(iCal, withCov=parsed.recover_cov)
 
     print()
-    bagtag = parsed.bagfile[0].translate("<>:/\|?*").replace('.bag', '', 1)
-    yamlFilename = "camchain-imucam-" + bagtag + ".yaml"
+    save_dir = Path(parsed.target_yaml).parent
+    yamlFilename = str(save_dir.joinpath("cam_imu.yaml"))
     iCal.saveCamChainParametersYaml(yamlFilename)
     print("  Saving camera chain calibration to file: {0}".format(yamlFilename))
 
     print()
-    yamlFilename = "imu-" + bagtag + ".yaml"
+    yamlFilename = str(save_dir.joinpath("imu_intrinsics.yaml"))
     iCal.saveImuSetParametersYaml(yamlFilename)
     print("  Saving imu calibration to file: {0}".format(yamlFilename))
 
-    resultFileTxt = "results-imucam-" + bagtag + ".txt"
-    util.saveResultTxt(iCal, filename=resultFileTxt)
-    print("  Detailed results written to file: {0}".format(resultFileTxt))
-    
-    print("Generating result report...")    
-    reportFile = "report-imucam-" + bagtag + ".pdf"
-    util.generateReport(iCal, filename=reportFile, showOnScreen=not parsed.dontShowReport)
-    print("  Report written to {0}".format(reportFile))
-    print()
     
     if parsed.exportPoses:
         print("Exporting poses...")
